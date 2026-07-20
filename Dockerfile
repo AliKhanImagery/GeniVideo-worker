@@ -12,5 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY download_models.py .
 COPY rp_handler.py .
-
-CMD ["python", "-u", "rp_handler.py"]
+COPY start.sh .
+RUN chmod +x start.sh
+CMD ["/bin/bash", "start.sh"]
