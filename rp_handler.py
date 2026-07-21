@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 import runpod
-from supabase import create_client
+import base64
 
 from ltx_pipelines.ti2vid_two_stages import TI2VidTwoStagesPipeline
 from ltx_core.loader import LoraPathStrengthAndSDOps, LTXV_LORA_COMFY_RENAMING_MAP
@@ -28,11 +28,7 @@ def validate_assets():
 
 validate_assets()
 
-# ── Supabase client ──────────────────────────────────────────────────────
-SUPABASE_URL    = os.environ["SUPABASE_URL"]
-SUPABASE_KEY    = os.environ["SUPABASE_KEY"]
-SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET", "videos")
-supabase        = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Demo mode — returns base64 video directly
 
 # ── Pipeline (loaded once at module scope) ───────────────────────────────
 print("Loading LTX pipeline (FP8)...")
@@ -88,16 +84,10 @@ def handler(job):
     encode_video(video, audio, tmp_path, fps=frame_rate, audio_sample_rate=AUDIO_SAMPLE_RATE)
 
     with open(tmp_path, "rb") as f:
-        supabase.storage.from_(SUPABASE_BUCKET).upload(
-            path=filename,
-            file=f,
-            file_options={"content-type": "video/mp4"},
-        )
+        video_b64 = base64.b64encode(f.read()).decode("utf-8")
 
     os.unlink(tmp_path)
-
-    signed = supabase.storage.from_(SUPABASE_BUCKET).create_signed_url(filename, 3600)
-    return {"url": signed["signedURL"], "filename": filename}
+    return {"video_base64": video_b64, "filename": filename}
 
 
 runpod.serverless.start({"handler": handler})
