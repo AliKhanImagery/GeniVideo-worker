@@ -2,7 +2,7 @@ FROM runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404
 
 ENV PYTHONUNBUFFERED=1 \
     PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
-    HF_HOME=/runpod-volume/huggingface
+    HF_HOME=/tmp/huggingface
 
 WORKDIR /app
 RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
